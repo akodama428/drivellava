@@ -53,9 +53,11 @@ class GPTVision:
 
         self.previous_messages = GPTState()
         self.max_history = max_history
-        self.num_trajectory_templates = 5
-        TRAJECTORY_TEMPLATES_NPY = f"./trajectory_templates/proposed_trajectory_templates_simple_{self.num_trajectory_templates}.npy"  # noqa
-        TRAJECTORY_TEMPLATES_KMEANS_PKL = f"./trajectory_templates/kmeans_simple_{self.num_trajectory_templates}.pkl"  # noqa
+        self.num_trajectory_templates =64
+        # TRAJECTORY_TEMPLATES_NPY = f"./trajectory_templates/proposed_trajectory_templates_simple_{self.num_trajectory_templates}.npy"  # noqa
+        # TRAJECTORY_TEMPLATES_KMEANS_PKL = f"./trajectory_templates/kmeans_simple_{self.num_trajectory_templates}.pkl"  # noqa
+        TRAJECTORY_TEMPLATES_NPY = f"./trajectory_templates/proposed_trajectory_templates_{self.num_trajectory_templates}.npy"  # noqa
+        TRAJECTORY_TEMPLATES_KMEANS_PKL = f"./trajectory_templates/kmeans_{self.num_trajectory_templates}.pkl"  # noqa
         self.trajectory_encoder = TrajectoryEncoder(
             num_trajectory_templates=self.num_trajectory_templates,
             trajectory_templates_npy=TRAJECTORY_TEMPLATES_NPY,
@@ -180,7 +182,9 @@ class GPTVision:
             ],
         )
 
-        # print(desc)
+        print("===debug desc start===")
+        print(desc)
+        print("===debug desc end===")
 
         gpt_controls = self.client.chat.completions.create(
             model=CONTROLS_MODEL,

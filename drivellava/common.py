@@ -8,8 +8,9 @@ KMPH_2_MPS = 1 / 3.6
 DEG_2_RAD = np.pi / 180
 
 DEFAULT_LLM_PROVIDER = "openai"
-DEFAULT_VISION_MODEL = "gpt-4-vision-preview"
+DEFAULT_VISION_MODEL = "gpt-4o"
 DEFAULT_CONTROLS_MODEL = "gpt-3.5-turbo"
+# DEFAULT_CONTROLS_MODEL = "gpt-4o"
 
 # DEFAULT_LLM_PROVIDER = "ollama"
 # DEFAULT_VISION_MODEL = "llava"

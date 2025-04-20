@@ -9,12 +9,12 @@ services:
       dockerfile: ./docker/Dockerfile
     volumes:
       - ./:/app
-      - /home/ubuntu/.cache:/root/.cache
-      - /home/ubuntu/.torch:/root/.torch
-      - /home/ubuntu/.config:/root/.config
-      - /home/ubuntu/.bash_history:/root/.bash_history
-      - /home/ubuntu/.netrc:/root/.netrc
-      - /home/ubuntu/Datasets:/root/Datasets
+      - /home/atsushi/.cache:/root/.cache
+      - /home/atsushi/.torch:/root/.torch
+      - /home/atsushi/.config:/root/.config
+      - /home/atsushi/.bash_history:/root/.bash_history
+      - /home/atsushi/.netrc:/root/.netrc
+      - /mnt/ssd/DriveLLaVA_WS/Datasets:/root/Datasets
     deploy:
       resources:
         reservations:

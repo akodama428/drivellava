@@ -1,71 +1,99 @@
+# ベースイメージ
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
+# 環境変数設定
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=UTF-8 \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH \
+    BNB_CUDA_VERSION=118 \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
 
-ENV DEBIAN_FRONTEND noninteractive
+# Python 3.10のインストール (最適化版)
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    build-essential \
+    git \
+    curl \
+    wget \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3.10-distutils \
+    python3.10-venv \
+    python3-pip \
+    python3-apt \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    protobuf-compiler \
+    libprotobuf-dev \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 \
+    && pip install --no-cache-dir protobuf \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apt-get update && apt-get install -y software-properties-common gcc && \
-    add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt-get update
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y software-properties-common gcc
-RUN apt-get install -y python3.10 python3.10-dev python3.10-distutils python3-pip python3-apt python3.10-venv
-RUN apt-get update && apt-get install -y git curl
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+# Python設定
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python \
+    && ln -sf /usr/bin/python3.10 /usr/bin/python3
 
-RUN /usr/bin/python3.10 -m pip install --upgrade pip
-# RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 # install pip
-
-# Alias python3.10 to python3
-RUN cp /usr/bin/python3.10 /usr/bin/python3
-
-# Copy code in for installation
-COPY ./ /app
+# OpenCvの設定
+RUN apt-get update && apt-get install -y \
+    libopencv-dev \
+    python3-opencv \
+    && pip install --no-cache-dir \
+    opencv-python-headless==4.9.0.80 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+    
+# 作業ディレクトリ設定
 WORKDIR /app
 
-# make virtualenv 
-SHELL ["/bin/bash", "-c"]
+# 依存関係のインストール (キャッシュを活用するため先にコピー)
+COPY requirements.txt .
+COPY requirements-torch.txt .
 
-# Install LLaVA
+# PyTorchと主要依存関係のインストール
+RUN pip install --no-cache-dir --upgrade pip setuptools ninja packaging \
+    && pip install --no-cache-dir \
+    torch==2.1.2 \
+    torchvision==0.16.2 \
+    torchaudio==2.1.2 \
+    --index-url https://download.pytorch.org/whl/cu118
+
+# Flash Attentionのインストール (Python 3.10用)
+RUN wget -q https://github.com/Dao-AILab/flash-attention/releases/download/v2.4.0/flash_attn-2.4.0+cu118torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl \
+    && pip install --no-cache-dir flash_attn-2.4.0+cu118torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl \
+    && rm flash_attn-2.4.0+cu118torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+# その他の依存関係
+RUN pip install --no-cache-dir \
+    transformers==4.36.0 \
+    peft==0.6.0 \
+    accelerate==0.21.0 \
+    deepspeed \
+    wandb \
+    tensorboard
+
+# アプリケーションコードのコピー
+COPY . .
+
+# LLaVAのインストール
 WORKDIR /app/LLaVA
+RUN pip install --no-cache-dir .
 
-RUN pip install .
-
-WORKDIR /app/
-
-# RUN \
-#     --mount=type=cache,target=/root/.cache/ \
-#     make install
-
-RUN make install
-
-RUN python3 -m pip install flash-attn --no-build-isolation --no-cache-dir
-RUN python3 -m pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118 --force-reinstall
-
-# Install dependencies
-# RUN /usr/bin/python3.10 -m pip install --upgrade pip
-# RUN /usr/bin/python3.10 -m pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1+cu117 --index-url https://download.pytorch.org/whl/cu117
-# RUN /usr/bin/python3.10 -m pip install tqdm wandb opencv-python-headless pandas matplotlib==3.6.2 timm==0.6.12 scipy==1.9.3
-
-# # Install requirements
-# RUN /usr/bin/python3.10 -m pip install -r requirements.txt
-# RUN /usr/bin/python3.10 -m pip install -r requirements-test.txt
-
-# Remove code, without removing env
-RUN find ./ ! -path './.venv*' ! -path './' -delete
-
-# RUN mkdir /app
+# メイン作業ディレクトリに戻る
 WORKDIR /app
 
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+# 不要ファイルの削除
+RUN find /app -type f -name '*.pyc' -delete \
+    && find /app -type d -name '__pycache__' -exec rm -rf {} +
 
-# Env vars for the nvidia-container-runtime.
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
-
-ENV BNB_CUDA_VERSION 118
-
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.10/dist-packages/nvidia/cuda_runtime/lib
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.10/dist-packages/nvidia/cuda_runtime/lib
-
+# シェル設定
 RUN echo 'PS1="(DLV) \[\]\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ \[\]"' >> /root/.bashrc
+
+# デフォルトコマンド
+CMD ["bash"]

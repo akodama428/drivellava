@@ -40,16 +40,24 @@ class CarlaClient:
         self.client = carla.Client(host, port)
         self.client.set_timeout(2000.0)
 
-        self.sim_world = self.client.get_world()
-        if sync:
-            settings = self.sim_world.get_settings()
-            # if not settings.synchronous_mode:
-            settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 1.0
-            self.sim_world.apply_settings(settings)
+        try:
+            self.sim_world = self.client.get_world()
+        except Exception as e:
+            print(f"Failed to connect to CARLA server: {e}")
+            raise
 
-            traffic_manager = self.client.get_trafficmanager()
-            traffic_manager.set_synchronous_mode(True)
+        if sync:
+            try:
+                settings = self.sim_world.get_settings()
+                settings.synchronous_mode = True
+                settings.fixed_delta_seconds = 1.0
+                self.sim_world.apply_settings(settings)
+
+                traffic_manager = self.client.get_trafficmanager()
+                traffic_manager.set_synchronous_mode(True)
+            except Exception as e:
+                print(f"Failed to configure synchronous mode: {e}")
+                raise
 
         if autopilot and not self.sim_world.get_settings().synchronous_mode:
             print(

@@ -19,6 +19,7 @@ from drivellava.trajectory_encoder import (
 )
 from drivellava.utils import plot_bev_trajectory, plot_steering_traj
 
+# garage_2仮想環境で実行すること
 
 def main():
 
@@ -26,7 +27,8 @@ def main():
 
     ENCODED_VIDEOS = [
         os.path.expanduser(
-            "~/Datasets/commavq/data_0_to_2500/000e83c564317de4668c2cb372f89b91_6.npy"  # noqa
+            # "~/Datasets/commavq/data_0_to_2500/000e83c564317de4668c2cb372f89b91_6.npy"  # noqa
+            "/mnt/ssd/DriveLLaVA_WS/Datasets/commavq/pose_data_0_to_2500/0a1a023c5498c18a889b51c9485906bd_18.npy"
         )
     ]
 
@@ -40,14 +42,16 @@ def main():
         for frame_index in range(1200):
             frame_path = get_image_path(
                 encoded_video_path, frame_index
-            ).replace("data_", "img_data_")
+            ).replace("pose_data_", "img_data_")
             decoded_imgs_list.append(frame_path)
 
-        pose_path = encoded_video_path.replace("data_", "pose_data_").replace(
-            "val", "pose_val"
-        )
+        # pose_path = encoded_video_path.replace("data_", "pose_data_").replace(
+        #     "val", "pose_val"
+        # )
 
-        # print(encoded_video_path, pose_path)
+        pose_path = encoded_video_path
+
+        print(encoded_video_path, pose_path)
         # exit()
         # encoded_video_path = "/root/Datasets/commavq/data_0_to_2500/000e83c564317de4668c2cb372f89b91_6.npy"  # noqa
 
@@ -82,9 +86,9 @@ def main():
             img = cv2.imread(decoded_imgs_list[i])
 
             trajectory, trajectory_encoded = pose_dataset[i]
-            # trajectory_quantized = trajectory_encoder.decode(
-            #     trajectory_encoded
-            # )
+            trajectory_quantized = trajectory_encoder.decode(
+                trajectory_encoded
+            )
 
             print(
                 "trajectory[0]",
@@ -111,16 +115,16 @@ def main():
                 color=(255, 0, 0),
             )
 
-            # img = plot_steering_traj(
-            #     img,
-            #     trajectory_quantized,
-            #     color=(0, 255, 0),
-            # )
+            img = plot_steering_traj(
+                img,
+                trajectory_quantized,
+                color=(0, 255, 0),
+            )
 
             img_bev = plot_bev_trajectory(trajectory, img, color=(255, 0, 0))
-            # img_bev = plot_bev_trajectory(
-            #     trajectory_quantized, img, color=(0, 255, 0)
-            # )
+            img_bev = plot_bev_trajectory(
+                trajectory_quantized, img, color=(0, 255, 0)
+            )
 
             # Write speed on img
             font = cv2.FONT_HERSHEY_SIMPLEX

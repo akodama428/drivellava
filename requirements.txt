@@ -1,15 +1,21 @@
-transformers
-deepspeed
-wandb
-opencv-python
-onnxruntime-gpu==1.15.0
+# requirements.txt
+torch==2.1.2+cu118
+torchvision==0.16.2+cu118
+torchaudio==2.1.2+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# manually compatible versions
+transformers==4.39.3
+accelerate==0.25.0
+peft==0.8.2
+
+# llava will be installed manually with --no-deps
+# or via pip install -e .
+# llava==1.2.2.post1  ←コメントアウト
+
+bitsandbytes==0.42.0
+numpy<2
+sentencepiece
+Pillow
 scipy
-matplotlib
-scikit-image
-scikit-learn
-chardet
-carla==0.9.15
-pygame==2.5.2
-numpy==1.26.4
-open3d==0.18.0
-instructor==0.4.2
+wandb

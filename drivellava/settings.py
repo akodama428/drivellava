@@ -30,7 +30,7 @@ class DroneSettings:
 class UISettings:
     UI_ENABLED: bool = str_to_bool(os.getenv("UI_ENABLED", "True"))
     CARLA_INSTALL_PATH: str = os.getenv(
-        "CARLA_INSTALL_PATH", os.path.expanduser("~/Apps/CARLA")
+        "CARLA_INSTALL_PATH", os.path.expanduser("/mnt/ssd/DriveLM/pdm_lite/carla/CARLA_Leaderboard_20")
     )
 
 
